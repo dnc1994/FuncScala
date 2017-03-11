@@ -40,8 +40,8 @@ object BarnesHut {
     
     val items = (1 to Runtime.getRuntime.availableProcessors).map(_.toString).toArray
     val parcombo = new JComboBox[String](items)
-//    parcombo.setSelectedIndex(items.length - 1)
-    parcombo.setSelectedIndex(0)
+    parcombo.setSelectedIndex(items.length - 1)
+//    parcombo.setSelectedIndex(0)
     parcombo.addActionListener(new ActionListener {
       def actionPerformed(e: ActionEvent) = {
         initialize(getParallelism, "two-galaxies", getTotalBodies)
@@ -53,7 +53,7 @@ object BarnesHut {
     val bodiesLabel = new JLabel("Total bodies")
     controls.add(bodiesLabel)
     
-    val bodiesSpinner = new JSpinner(new SpinnerNumberModel(25000, 32, 1000000, 1000))
+    val bodiesSpinner = new JSpinner(new SpinnerNumberModel(50000, 32, 1000000, 1000))
     bodiesSpinner.addChangeListener(new ChangeListener {
       def stateChanged(e: ChangeEvent) = {
         if (frame != null) {

@@ -94,15 +94,16 @@ package object barneshut {
 
     def minimumSize = 0.00001f
 
-    def gee: Float = 100.0f
+    def gee: Float = 250.0f
 
-    def delta: Float = 0.01f
+    def delta: Float = 0.2f
 
     def theta = 0.5f
 
     def eliminationThreshold = 0.5f
 
     def force(m1: Float, m2: Float, dist: Float): Float = gee * m1 * m2 / (dist * dist)
+//    def force(m1: Float, m2: Float, dist: Float): Float = gee * m1 * m2 * dist
 
     def distance(x0: Float, y0: Float, x1: Float, y1: Float): Float = {
         math.sqrt((x1 - x0) * (x1 - x0) + (y1 - y0) * (y1 - y0)).toFloat

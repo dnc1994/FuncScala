@@ -56,8 +56,10 @@ class SimulationModel {
       }
     }
 
-    galaxy(0, bodyArray.length / 8, 300.0f, 0.0f, 0.0f, 0.0f, 0.0f)
-    galaxy(bodyArray.length / 8, bodyArray.length / 8 * 7, 350.0f, -1800.0f, -1200.0f, 0.0f, 0.0f)
+    galaxy(0, bodyArray.length / 10, 400.0f, -1200.0f, -800.0f, 0.0f, 0.0f)
+    galaxy(bodyArray.length / 10, bodyArray.length / 10 * 2, 500.0f, -600.0f, -800.0f, 0.0f, 0.0f)
+    galaxy(bodyArray.length / 10 * 3, bodyArray.length / 10 * 3, 600.0f, -1200.0f, -400.0f, 0.0f, 0.0f)
+    galaxy(bodyArray.length / 10 * 6, bodyArray.length / 10 * 4, 700.0f, -600.0f, -400.0f, 0.0f, 0.0f)
 
     bodies = bodyArray.toSeq
 

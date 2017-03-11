@@ -44,14 +44,13 @@ object Main {
       * Exercise 3
       */
     def countChange(money: Int, coins: List[Int]): Int = {
-        def countChangeSolver(money: Int, coins: List[Int]): Int = {
+        def countChangeSolver(money: Int, coins: List[Int]): Int =
             if (money < 0 || money > 0 && coins.isEmpty)
                 0
             else if (money == coins.head)
                 1
             else
                 countChangeSolver(money - coins.head, coins) + countChangeSolver(money, coins.tail)
-        }
 
         countChangeSolver(money, coins.sorted)
     }
