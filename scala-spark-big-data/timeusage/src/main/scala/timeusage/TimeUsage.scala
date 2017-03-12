@@ -63,15 +63,18 @@ object TimeUsage {
     *         have type Double. None of the fields are nullable.
     * @param columnNames Column names of the DataFrame
     */
-  def dfSchema(columnNames: List[String]): StructType =
-    ???
+  def dfSchema(columnNames: List[String]): StructType = {
+    val first = StructField(columnNames.head, StringType, nullable = false)
+    val rest = columnNames.tail.map(StructField(_, DoubleType, nullable = false))
+    StructType(first :: rest)
+  }
 
 
   /** @return An RDD Row compatible with the schema produced by `dfSchema`
     * @param line Raw fields
     */
   def row(line: List[String]): Row =
-    ???
+    Row.fromSeq(line.head :: line.tail.map(_.toDouble))
 
   /** @return The initial data frame columns partitioned in three groups: primary needs (sleeping, eating, etc.),
     *         work and other (leisure activities)
@@ -89,7 +92,21 @@ object TimeUsage {
     *    “t10”, “t12”, “t13”, “t14”, “t15”, “t16” and “t18” (those which are not part of the previous groups only).
     */
   def classifiedColumns(columnNames: List[String]): (List[Column], List[Column], List[Column]) = {
-    ???
+    val primaryPrefix = List("t01", "t03", "t11", "t1801", "t1803")
+    val workingPrefix = List("t05", "t1805")
+    val otherPrefix = List("t02", "t04", "t06", "t08", "t09", "t10", "t12", "t13", "t14", "t15", "t16", "t18")
+
+    columnNames.foldRight[(List[Column], List[Column], List[Column])]((Nil, Nil, Nil)) {
+      (columnName, acc) =>
+        if (primaryPrefix.exists(columnName.startsWith))
+          acc.copy(_1 = new Column(columnName) :: acc._1)
+        else if (workingPrefix.exists(columnName.startsWith))
+          acc.copy(_2 = new Column(columnName) :: acc._2)
+        else if (otherPrefix.exists(columnName.startsWith))
+          acc.copy(_3 = new Column(columnName) :: acc._3)
+        else
+          acc
+    }
   }
 
   /** @return a projection of the initial DataFrame such that all columns containing hours spent on primary needs
@@ -128,13 +145,19 @@ object TimeUsage {
     otherColumns: List[Column],
     df: DataFrame
   ): DataFrame = {
-    val workingStatusProjection: Column = ???
-    val sexProjection: Column = ???
-    val ageProjection: Column = ???
+    val workingStatusProjection: Column =
+      when($"telfs" >= 1 && $"telfs" < 3, "working").otherwise("not working").as("working")
+    val sexProjection: Column =
+      when($"tesex" === 1, "male").otherwise("female").as("sex")
+    val ageProjection: Column =
+      when($"teage" >= 15 && $"teage" <= 22, "young")
+      .when($"teage" >= 23 && $"teage" <= 55, "active")
+      .otherwise("elder")
+      .as("age")
 
-    val primaryNeedsProjection: Column = ???
-    val workProjection: Column = ???
-    val otherProjection: Column = ???
+    val primaryNeedsProjection: Column = primaryNeedsColumns.reduce(_ + _).divide(60).as("primaryNeeds")
+    val workProjection: Column = workColumns.reduce(_ + _).divide(60).as("work")
+    val otherProjection: Column = otherColumns.reduce(_ + _).divide(60).as("other")
     df
       .select(workingStatusProjection, sexProjection, ageProjection, primaryNeedsProjection, workProjection, otherProjection)
       .where($"telfs" <= 4) // Discard people who are not in labor force
@@ -159,7 +182,9 @@ object TimeUsage {
     * Finally, the resulting DataFrame should be sorted by working status, sex and age.
     */
   def timeUsageGrouped(summed: DataFrame): DataFrame = {
-    ???
+    summed.groupBy("working", "sex", "age")
+      .agg(round(avg("primaryNeeds"), 1), round(avg("work"), 1), round(avg("other"), 1))
+      .orderBy("working", "sex", "age")
   }
 
 
@@ -169,7 +194,7 @@ object TimeUsage {
     */
   def timeUsageGroupedSql(summed: DataFrame): DataFrame = {
     val viewName = "summed"
-    summed.createTempView(viewName)
+    summed.createOrReplaceTempView(viewName)
     spark.sql(timeUsageGroupedSqlQuery(viewName))
   }
 
@@ -177,7 +202,12 @@ object TimeUsage {
     * @param viewName Name of the SQL view to use
     */
   def timeUsageGroupedSqlQuery(viewName: String): String =
-    ???
-
+    s"""
+    select working, sex, age,
+    round(sum(primaryNeeds) / count(primaryNeeds), 1),
+    round(sum(work) / count(work), 1),
+    round(sum(other) / count(other), 1)
+    from $viewName
+    group by working, sex, age
+    order by working, sex, age """
 }
-
